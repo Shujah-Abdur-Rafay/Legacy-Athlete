@@ -46,6 +46,25 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [showDashboard, setShowDashboard] = useState(true);
   const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(undefined);
+  const [pendingScrollTarget, setPendingScrollTarget] = useState<string | null>(null);
+
+  // After leaving the dashboard with a pending scroll target, smooth-scroll to that section
+  useEffect(() => {
+    if (showDashboard || !pendingScrollTarget) return;
+    const id = pendingScrollTarget;
+    setPendingScrollTarget(null);
+    requestAnimationFrame(() => {
+      const tryScroll = (attempt = 0) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (attempt < 10) {
+          setTimeout(() => tryScroll(attempt + 1), 80);
+        }
+      };
+      tryScroll();
+    });
+  }, [showDashboard, pendingScrollTarget]);
 
   useEffect(() => {
     ScrollTrigger.config({
@@ -94,6 +113,7 @@ function App() {
         setShowDashboard(true);
       }}
       onBackToSite={() => setShowDashboard(false)}
+      onBookSession={() => { setPendingScrollTarget('apply'); setShowDashboard(false); }}
     />;
   }
 

@@ -283,9 +283,11 @@ const ProfileTab: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
 interface DashboardProps {
   onLogout: () => void;
   onBackToSite: () => void;
+  onBookSession?: () => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ onLogout, onBackToSite }) => {
+const Dashboard: React.FC<DashboardProps> = ({ onLogout, onBackToSite, onBookSession }) => {
+  const goToBookings = onBookSession || onBackToSite;
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<Tab>('bookings');
   const user = auth.currentUser;
@@ -417,7 +419,7 @@ const Dashboard: React.FC<DashboardProps> = ({ onLogout, onBackToSite }) => {
         {/* Content */}
         <div className="flex-1 overflow-auto p-8 md:p-10">
           <div className="dash-panel max-w-3xl mx-auto">
-            {activeTab === 'bookings' && <BookingsTab onLogout={onLogout} onBookSession={onBackToSite} />}
+            {activeTab === 'bookings' && <BookingsTab onLogout={onLogout} onBookSession={goToBookings} />}
             {activeTab === 'calendar' && <CalendarTab />}
             {activeTab === 'profile' && <ProfileTab onLogout={onLogout} />}
           </div>
