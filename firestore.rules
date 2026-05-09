@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Auth helpers ──────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Admin is determined solely by a custom claim set via Firebase Admin SDK.
+    // No hardcoded emails — add/remove admins via the setAdminClaim Cloud Function.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // ── Sessions: publicly readable, backend-only writes ─────────────────────
+    match /sessions/{sessionId} {
+      allow read:  if true;
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ── Schedule templates (recurring weekly schedule): public read, admin write ─
+    match /schedule_templates/{dayId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Per-instance session overrides (cancel / edit a single occurrence) ───
+    match /session_overrides/{sessionId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Packages / pricing tiers: public read, admin write ────────────────────
+    match /packages/{packageId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Upcoming events / roadmap: public read, admin write ───────────────────
+    match /events/{eventId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Schedule version meta (bumped by admin to trigger client refresh) ────
+    match /schedule_meta/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ── Bookings: admin read-all; user reads own bookings; backend-only writes ─
+    match /bookings/{bookingId} {
+      allow read:  if isAdmin() || (isSignedIn() && resource.data.user_id == request.auth.uid);
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ── Plan purchases: admin read-all; user reads own ────────────────────────
+    match /plan_purchases/{purchaseId} {
+      allow read:  if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow write: if false;
+    }
+
+    // ── Settings (calendar_auth, shared_calendar, etc.): admin only ───────────
+    match /settings/{docId} {
+      allow read:  if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── Processed payments / failures / disputes: admin read-only ─────────────
+    match /processed_payments/{docId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    match /payment_failures/{docId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    match /disputes/{docId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Audit log: admin read-only, backend-only writes ───────────────────────
+    match /audit_log/{logId} {
+      allow read:  if isAdmin();
+      allow write: if false;
+    }
+
+    // ── Rate limit counters: no direct client access ──────────────────────────
+    match /rate_limits/{docId} {
+      allow read:  if false;
+      allow write: if false;
+    }
+  }
+}

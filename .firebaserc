@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "limitless-athlete-1e02a",
+    "production": "limitless-athlete-1e02a",
+    "staging": "limitless-athlete-staging"
+  }
+}
