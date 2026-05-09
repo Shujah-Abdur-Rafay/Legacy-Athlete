@@ -92,14 +92,36 @@ const db = admin.firestore();
 const CST_TIMEZONE = "America/Chicago";
 const MAX_ATTENDANCE = 12;
 const COACH_EMAIL = "mw@thelimitlessathlete.com";
-// Training schedule
-const SCHEDULE = [
+// Training schedule (default fallback — used only when Firestore schedule_templates collection is empty)
+const DEFAULT_SCHEDULE = [
     { day: 1, times: [{ h: 18, m: 30, focus: "Speed & Agility (GS)", duration: 30 }, { h: 19, m: 0, focus: "Total Skills/IQ/Gameplay (GS)", duration: 60 }] },
     { day: 2, times: [{ h: 18, m: 30, focus: "Strength + Power (GS)", duration: 30 }, { h: 19, m: 0, focus: "Shooting (300+) (GS)", duration: 60 }] },
     { day: 3, times: [{ h: 18, m: 30, focus: "Mobility + Cond. (GS)", duration: 30 }, { h: 19, m: 0, focus: "Ball Handling (GS)", duration: 60 }] },
     { day: 4, times: [{ h: 18, m: 30, focus: "Speed & Agility (GS)", duration: 30 }, { h: 19, m: 0, focus: "Total Skills/IQ/Gameplay (GS)", duration: 60 }] },
     { day: 6, times: [{ h: 8, m: 0, focus: "Select Practice (GS)", duration: 60 }, { h: 9, m: 0, focus: "Strength + Power (GS)", duration: 30 }, { h: 9, m: 30, focus: "Game prep: footwork and skills (GS)", duration: 60 }] },
 ];
+async function loadScheduleFromFirestore() {
+    try {
+        const snap = await db.collection("schedule_templates").get();
+        if (snap.empty)
+            return DEFAULT_SCHEDULE;
+        const days = [];
+        snap.docs.forEach((d) => {
+            const data = d.data();
+            if (data.active === false)
+                return;
+            const day = typeof data.day === "number" ? data.day : parseInt(d.id, 10);
+            if (isNaN(day) || !Array.isArray(data.times))
+                return;
+            days.push({ day, times: data.times.filter((t) => typeof (t === null || t === void 0 ? void 0 : t.h) === "number" && typeof (t === null || t === void 0 ? void 0 : t.m) === "number" && (t === null || t === void 0 ? void 0 : t.focus) && typeof (t === null || t === void 0 ? void 0 : t.duration) === "number") });
+        });
+        return days.length ? days : DEFAULT_SCHEDULE;
+    }
+    catch (e) {
+        console.error("[loadSchedule] Firestore read failed, using defaults:", e);
+        return DEFAULT_SCHEDULE;
+    }
+}
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function getStripeKey() {
     const key = process.env.STRIPE_SECRET_KEY;
@@ -612,10 +634,11 @@ exports.getSessions = functions.https.onRequest((req, res) => {
             const nowCST = (0, date_fns_tz_1.toZonedTime)(new Date(), CST_TIMEZONE);
             const todayCST = (0, date_fns_1.startOfDay)(nowCST);
             const sessions = [];
+            const scheduleData = await loadScheduleFromFirestore();
             for (let i = 0; i < 14; i++) {
                 const currentDateCST = (0, date_fns_1.addDays)(todayCST, i);
                 const dayOfWeek = currentDateCST.getDay();
-                const daySchedule = SCHEDULE.find((s) => s.day === dayOfWeek);
+                const daySchedule = scheduleData.find((s) => s.day === dayOfWeek);
                 if (daySchedule) {
                     for (const time of daySchedule.times) {
                         const sessionDateCST = (0, date_fns_1.setMinutes)((0, date_fns_1.setHours)(currentDateCST, time.h), time.m);
@@ -623,17 +646,27 @@ exports.getSessions = functions.https.onRequest((req, res) => {
                         if ((0, date_fns_1.isAfter)(sessionDateUTC, new Date())) {
                             const endDateUTC = new Date(sessionDateUTC.getTime() + time.duration * 60 * 1000);
                             const sessionId = sessionDateUTC.toISOString();
-                            const sessionDoc = await db.collection("sessions").doc(encodeURIComponent(sessionId)).get();
+                            const encodedId = encodeURIComponent(sessionId);
+                            // Per-instance override (cancel / edit a single occurrence)
+                            const overrideDoc = await db.collection("session_overrides").doc(encodedId).get();
+                            const override = overrideDoc.exists ? overrideDoc.data() : null;
+                            if (override === null || override === void 0 ? void 0 : override.cancelled)
+                                continue;
+                            const focus = (override === null || override === void 0 ? void 0 : override.focus) || time.focus;
+                            const duration = typeof (override === null || override === void 0 ? void 0 : override.duration) === "number" ? override.duration : time.duration;
+                            const effectiveEnd = new Date(sessionDateUTC.getTime() + duration * 60 * 1000);
+                            const sessionDoc = await db.collection("sessions").doc(encodedId).get();
                             const bookedCount = sessionDoc.exists ? (((_a = sessionDoc.data()) === null || _a === void 0 ? void 0 : _a.bookedCount) || 0) : 0;
+                            const maxAttendance = typeof (override === null || override === void 0 ? void 0 : override.maxAttendance) === "number" ? override.maxAttendance : MAX_ATTENDANCE;
                             sessions.push({
                                 id: sessionId,
                                 date: (0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDateUTC, CST_TIMEZONE), "EEEE, MMM do"),
-                                time: `${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDateUTC, CST_TIMEZONE), "h:mm a")} – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(endDateUTC, CST_TIMEZONE), "h:mm a")} CST`,
-                                focus: time.focus,
-                                duration: time.duration,
-                                spotsAvailable: MAX_ATTENDANCE - bookedCount,
-                                isFull: bookedCount >= MAX_ATTENDANCE,
-                                coach: "MW",
+                                time: `${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDateUTC, CST_TIMEZONE), "h:mm a")} – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(effectiveEnd, CST_TIMEZONE), "h:mm a")} CST`,
+                                focus,
+                                duration,
+                                spotsAvailable: Math.max(0, maxAttendance - bookedCount),
+                                isFull: bookedCount >= maxAttendance,
+                                coach: (override === null || override === void 0 ? void 0 : override.coach) || "MW",
                             });
                         }
                     }
@@ -666,14 +699,37 @@ const PERFORMANCE_ADDON_CENTS = {
 };
 /**
  * Compute the authoritative charge amount in cents.
+ * Reads pricing from the Firestore `packages` collection if present,
+ * otherwise falls back to the hardcoded PLAN_PRICES_CENTS map.
  * Mirrors the UI calculation but is the only version Stripe trusts.
  */
-function calculatePlanAmountCents(planId, addPerformance, is8Week) {
-    const base = PLAN_PRICES_CENTS[planId];
+async function calculatePlanAmountCents(planId, addPerformance, is8Week) {
+    let base = PLAN_PRICES_CENTS[planId];
+    let perfDropIn = PERFORMANCE_ADDON_CENTS["drop-in"];
+    let perfDefault = PERFORMANCE_ADDON_CENTS["default"];
+    try {
+        const pkgDoc = await db.collection("packages").doc(planId).get();
+        if (pkgDoc.exists) {
+            const data = pkgDoc.data();
+            if (typeof data.priceCents === "number")
+                base = data.priceCents;
+        }
+        const perfDoc = await db.collection("packages").doc("performance-addon-config").get();
+        if (perfDoc.exists) {
+            const d = perfDoc.data();
+            if (typeof d.dropInCents === "number")
+                perfDropIn = d.dropInCents;
+            if (typeof d.defaultCents === "number")
+                perfDefault = d.defaultCents;
+        }
+    }
+    catch (e) {
+        console.warn("[pricing] Firestore lookup failed, using fallback:", e);
+    }
     if (!base)
         throw new Error(`Unknown plan: ${planId}`);
     const perf = (addPerformance && planId !== "performance-solo")
-        ? (planId === "drop-in" ? PERFORMANCE_ADDON_CENTS["drop-in"] : PERFORMANCE_ADDON_CENTS["default"])
+        ? (planId === "drop-in" ? perfDropIn : perfDefault)
         : 0;
     const months = (is8Week && planId !== "drop-in") ? 2 : 1;
     const subtotal = (base + perf) * months;
@@ -808,7 +864,7 @@ exports.createPaymentIntent = functions.https.onRequest((req, res) => {
                     return;
                 }
                 try {
-                    amount = calculatePlanAmountCents(String(planId), Boolean(addPerformance), Boolean(is8Week));
+                    amount = await calculatePlanAmountCents(String(planId), Boolean(addPerformance), Boolean(is8Week));
                 }
                 catch (_a) {
                     res.status(400).json({ error: "Invalid plan configuration" });
@@ -909,6 +965,8 @@ exports.createBooking = functions.https.onRequest((req, res) => {
             let sessionDate = new Date();
             let endDate = new Date();
             let sessionFocus = "";
+            // Load schedule outside the transaction (Firestore reads inside txns must come before writes)
+            const SCHEDULE = await loadScheduleFromFirestore();
             await db.runTransaction(async (transaction) => {
                 const sessionDoc = await transaction.get(sessionDocRef);
                 const sessionData = sessionDoc.exists ? sessionDoc.data() : { bookedCount: 0 };
@@ -1356,6 +1414,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                         let sessionDate = new Date();
                         let endDate = new Date();
                         let sessionFocus = "";
+                        const SCHEDULE = await loadScheduleFromFirestore();
                         try {
                             await db.runTransaction(async (tx) => {
                                 var _a;
