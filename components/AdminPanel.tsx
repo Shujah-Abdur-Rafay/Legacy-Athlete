@@ -9,7 +9,6 @@ import { format } from 'date-fns';
 import SharedCalendar from './SharedCalendar';
 import ScheduleManager from './admin/ScheduleManager';
 import PackageManager from './admin/PackageManager';
-import EventManager from './admin/EventManager';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Booking {
@@ -95,7 +94,7 @@ const BookingRow: React.FC<{ booking: Booking }> = ({ booking }) => {
 const AdminPanel: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'schedule' | 'packages' | 'events' | 'analytics'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'schedule' | 'packages' | 'analytics'>('bookings');
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -121,7 +120,6 @@ const AdminPanel: React.FC = () => {
     { id: 'bookings', label: 'Bookings' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'packages', label: 'Packages' },
-    { id: 'events', label: 'Events' },
     { id: 'calendar', label: 'Calendar' },
     { id: 'analytics', label: 'Analytics' },
   ] as const;
@@ -254,9 +252,6 @@ const AdminPanel: React.FC = () => {
 
             {/* ── Packages Tab ── */}
             {activeTab === 'packages' && <PackageManager />}
-
-            {/* ── Events Tab ── */}
-            {activeTab === 'events' && <EventManager />}
 
             {/* ── Analytics Tab ── */}
             {activeTab === 'analytics' && (
