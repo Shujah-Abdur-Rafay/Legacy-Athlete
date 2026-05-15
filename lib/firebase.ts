@@ -3,13 +3,23 @@ import { getAuth, GoogleAuthProvider, EmailAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyB6jjpkK0ADGiebYDhOiZs_uvQKtgQBtgo",
-  authDomain: "limitless-athlete-1e02a.firebaseapp.com",
-  projectId: "limitless-athlete-1e02a",
-  storageBucket: "limitless-athlete-1e02a.firebasestorage.app",
-  messagingSenderId: "1030103982518",
-  appId: "1:1030103982518:web:5df7d0d4ee4777a6cc6117"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
+
+const missing = Object.entries(firebaseConfig)
+  .filter(([, v]) => !v)
+  .map(([k]) => k);
+if (missing.length > 0) {
+  throw new Error(
+    `Missing Firebase env vars: ${missing.join(', ')}. ` +
+    `Set VITE_FIREBASE_* in your environment (see .env.example).`
+  );
+}
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);

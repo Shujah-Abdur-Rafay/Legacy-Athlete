@@ -30,6 +30,7 @@ dist-ssr
 functions/.env
 functions/.env.local
 functions/.secret.local
+functions/.runtimeconfig.json
 serviceAccountKey.json
 *-service-account*.json
 service-acc-key.json
