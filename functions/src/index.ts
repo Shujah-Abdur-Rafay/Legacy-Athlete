@@ -14,6 +14,8 @@ const corsLib = require("cors");
 
 // ── CORS allowlist ────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
+  "https://legacyathlete.fit",
+  "https://www.legacyathlete.fit",
   "https://limitlessathlete.com",
   "https://www.limitlessathlete.com",
   "https://limitless-athlete-1e02a.web.app",
@@ -240,7 +242,7 @@ function generateICS(sessionDate: Date, endDate: Date, athleteName: string, focu
 }
 
 function buildAthleteEmail(athleteName: string, sessionDate: Date, endDate: Date, focus: string, bookingId: string, cancellationToken: string): string {
-  const baseUrl = process.env.APP_BASE_URL || "https://limitless-athlete-1e02a.web.app";
+  const baseUrl = process.env.APP_BASE_URL || "https://legacyathlete.fit";
   const cancelUrl = `${baseUrl}/cancel?token=${cancellationToken}`;
   const dateStr = format(toZonedTime(sessionDate, CST_TIMEZONE), "EEEE, MMMM do, yyyy");
   const timeStr = `${format(toZonedTime(sessionDate, CST_TIMEZONE), "h:mm a")} – ${format(toZonedTime(endDate, CST_TIMEZONE), "h:mm a")} CST`;
@@ -545,7 +547,7 @@ export const exchangeCalendarToken = functions.https.onRequest((req, res) => {
       res.status(500).json({ error: "Google OAuth client not configured on server" }); return;
     }
 
-    const appBaseUrl = process.env.APP_BASE_URL || "https://limitless-athlete-1e02a.web.app";
+    const appBaseUrl = process.env.APP_BASE_URL || "https://legacyathlete.fit";
     // Prefer the redirectUri sent by the client (allows localhost dev), fall back to production URL
     const redirectUri = clientRedirectUri || `${appBaseUrl}/oauth/callback`;
 

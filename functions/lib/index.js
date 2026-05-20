@@ -50,6 +50,8 @@ const date_fns_tz_1 = require("date-fns-tz");
 const corsLib = require("cors");
 // ── CORS allowlist ────────────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = [
+    "https://legacyathlete.fit",
+    "https://www.legacyathlete.fit",
     "https://limitlessathlete.com",
     "https://www.limitlessathlete.com",
     "https://limitless-athlete-1e02a.web.app",
@@ -258,7 +260,7 @@ function generateICS(sessionDate, endDate, athleteName, focus, bookingId) {
     ].join("\r\n");
 }
 function buildAthleteEmail(athleteName, sessionDate, endDate, focus, bookingId, cancellationToken) {
-    const baseUrl = process.env.APP_BASE_URL || "https://limitless-athlete-1e02a.web.app";
+    const baseUrl = process.env.APP_BASE_URL || "https://legacyathlete.fit";
     const cancelUrl = `${baseUrl}/cancel?token=${cancellationToken}`;
     const dateStr = (0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "EEEE, MMMM do, yyyy");
     const timeStr = `${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "h:mm a")} – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(endDate, CST_TIMEZONE), "h:mm a")} CST`;
@@ -562,7 +564,7 @@ exports.exchangeCalendarToken = functions.https.onRequest((req, res) => {
             res.status(500).json({ error: "Google OAuth client not configured on server" });
             return;
         }
-        const appBaseUrl = process.env.APP_BASE_URL || "https://limitless-athlete-1e02a.web.app";
+        const appBaseUrl = process.env.APP_BASE_URL || "https://legacyathlete.fit";
         // Prefer the redirectUri sent by the client (allows localhost dev), fall back to production URL
         const redirectUri = clientRedirectUri || `${appBaseUrl}/oauth/callback`;
         try {
