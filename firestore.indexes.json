@@ -46,6 +46,15 @@
   //     ]
   //   },
   // ]
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "plan_purchases",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "manualGrant", "order": "ASCENDING" },
+        { "fieldPath": "purchasedAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }

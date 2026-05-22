@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendWelcomeEmail = exports.setAdminClaim = exports.stripeWebhook = exports.getSharedCalendarIdEndpoint = exports.getSharedCalendarEvents = exports.checkCancellation = exports.confirmPlanPurchase = exports.cancelBooking = exports.createBooking = exports.createPaymentIntent = exports.getSessions = exports.getCalendarStatus = exports.exchangeCalendarToken = void 0;
+exports.sendWelcomeEmail = exports.adminRevokePackage = exports.adminGrantPackage = exports.setAdminClaim = exports.stripeWebhook = exports.getSharedCalendarIdEndpoint = exports.getSharedCalendarEvents = exports.checkCancellation = exports.confirmPlanPurchase = exports.cancelBooking = exports.createBooking = exports.createPaymentIntent = exports.getSessions = exports.getCalendarStatus = exports.exchangeCalendarToken = void 0;
 const functions = __importStar(require("firebase-functions"));
 const functionsV1 = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
@@ -1047,14 +1047,14 @@ exports.createBooking = functions.https.onRequest((req, res) => {
             const icsContent = generateICS(sessionDate, endDate, safeAthleteName, sessionFocus, bookingId);
             const icsBase64 = Buffer.from(icsContent).toString("base64");
             await resend.emails.send({
-                from: "Legacy Athlete <bookings@thelimitlessathlete.com>",
+                from: "Legacy Athlete <bookings@legacyathlete.fit>",
                 to: [safeEmail],
                 subject: `✅ Session Confirmed – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "EEEE, MMM do")}`,
                 html: buildAthleteEmail(safeAthleteName, sessionDate, endDate, sessionFocus, bookingId, cancellationToken),
                 attachments: [{ filename: "session.ics", content: icsBase64 }],
             });
             await resend.emails.send({
-                from: "Legacy Athlete Bookings <bookings@thelimitlessathlete.com>",
+                from: "Legacy Athlete Bookings <bookings@legacyathlete.fit>",
                 to: [COACH_EMAIL],
                 subject: `🔔 New Booking: ${safeAthleteName} – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "MMM do h:mm a")} CST`,
                 html: buildCoachEmail(safeAthleteName, safeEmail, sessionDate, sessionFocus, sessionId, bookingId, "PAID", calendarEventId),
@@ -1147,7 +1147,7 @@ exports.cancelBooking = functions.https.onRequest((req, res) => {
             // Send cancellation email
             const resend = initResend();
             await resend.emails.send({
-                from: "Legacy Athlete <bookings@thelimitlessathlete.com>",
+                from: "Legacy Athlete <bookings@legacyathlete.fit>",
                 to: [booking.email],
                 subject: `Booking Cancelled – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "MMM do")}`,
                 html: buildCancellationEmail(booking.athlete_name, sessionDate, booking.focus || "Training Session"),
@@ -1223,14 +1223,14 @@ exports.confirmPlanPurchase = functions.https.onRequest((req, res) => {
             const authorativeAmount = paymentIntent.amount / 100; // cents → dollars
             // Athlete receipt
             await resend.emails.send({
-                from: "Legacy Athlete <bookings@thelimitlessathlete.com>",
+                from: "Legacy Athlete <bookings@legacyathlete.fit>",
                 to: [String(email).toLowerCase().trim()],
                 subject: `✅ Enrollment Confirmed – ${planName}`,
                 html: buildPlanPurchaseEmail(String(email).toLowerCase().trim(), planName, authorativeAmount, transactionId, addons, Boolean(is8Week)),
             });
             // Coach notification
             await resend.emails.send({
-                from: "Legacy Athlete Plans <bookings@thelimitlessathlete.com>",
+                from: "Legacy Athlete Plans <bookings@legacyathlete.fit>",
                 to: [COACH_EMAIL],
                 subject: `💳 New Plan Purchase: ${email} – ${planName}`,
                 html: buildCoachPlanEmail(String(email).toLowerCase().trim(), planName, authorativeAmount, transactionId, addons, Boolean(is8Week)),
@@ -1476,14 +1476,14 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                             const resend = initResend();
                             const ics = generateICS(sessionDate, endDate, athleteName, sessionFocus, bookingId);
                             await resend.emails.send({
-                                from: "Legacy Athlete <bookings@thelimitlessathlete.com>",
+                                from: "Legacy Athlete <bookings@legacyathlete.fit>",
                                 to: [email.toLowerCase()],
                                 subject: `✅ Session Confirmed – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "EEEE, MMM do")}`,
                                 html: buildAthleteEmail(athleteName, sessionDate, endDate, sessionFocus, bookingId, cancellationToken),
                                 attachments: [{ filename: "session.ics", content: Buffer.from(ics).toString("base64") }],
                             });
                             await resend.emails.send({
-                                from: "Legacy Athlete Bookings <bookings@thelimitlessathlete.com>",
+                                from: "Legacy Athlete Bookings <bookings@legacyathlete.fit>",
                                 to: [COACH_EMAIL],
                                 subject: `🔔 New Booking (webhook): ${athleteName} – ${(0, date_fns_1.format)((0, date_fns_tz_1.toZonedTime)(sessionDate, CST_TIMEZONE), "MMM do h:mm a")} CST`,
                                 html: buildCoachEmail(athleteName, email, sessionDate, sessionFocus, sessionId, bookingId, "PAID", calendarEventId),
@@ -1564,7 +1564,7 @@ exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
                 try {
                     const resend = initResend();
                     await resend.emails.send({
-                        from: "Legacy Athlete Alerts <bookings@thelimitlessathlete.com>",
+                        from: "Legacy Athlete Alerts <bookings@legacyathlete.fit>",
                         to: [COACH_EMAIL],
                         subject: `⚠️ Chargeback Filed – $${(dispute.amount / 100).toFixed(2)} – Action Required`,
                         html: `<p>A chargeback has been filed for Payment Intent <b>${piId}</b>.<br>
@@ -1633,6 +1633,216 @@ exports.setAdminClaim = functions.https.onRequest((req, res) => {
         }
     });
 });
+// ─── FUNCTION: adminGrantPackage ──────────────────────────────────────────────
+// Admin-only. Manually assigns a package to a user by email (for cash
+// purchases that don't go through Stripe). Supports an optional percentage
+// discount, the 8-week bundle, and the performance add-on. Records the grant
+// in `plan_purchases` so it surfaces in the user's dashboard exactly like a
+// paid plan, and emails both the athlete and the coach.
+exports.adminGrantPackage = functions.https.onRequest({ invoker: "public" }, (req, res) => {
+    applyCors(req, res, async () => {
+        if (req.method !== "POST" && req.method !== "OPTIONS") {
+            res.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+        const adminDecoded = await verifyAdminToken(req);
+        if (!adminDecoded) {
+            res.status(403).json({ error: "Forbidden: admin access required" });
+            return;
+        }
+        const { email, packageId, discountPercent = 0, addPerformance = false, is8Week = false, paymentMethod = "cash", notes = "", sendEmail = true, } = req.body || {};
+        if (!email || !packageId) {
+            res.status(400).json({ error: "Missing required fields: email, packageId" });
+            return;
+        }
+        if (!isValidEmail(String(email))) {
+            res.status(400).json({ error: "Invalid email address" });
+            return;
+        }
+        const discount = Number(discountPercent) || 0;
+        if (discount < 0 || discount > 100) {
+            res.status(400).json({ error: "discountPercent must be between 0 and 100" });
+            return;
+        }
+        try {
+            // ── Load package (server-authoritative pricing) ──────────────────────
+            const pkgDoc = await db.collection("packages").doc(String(packageId)).get();
+            let planName = String(packageId);
+            let base = PLAN_PRICES_CENTS[String(packageId)];
+            if (pkgDoc.exists) {
+                const data = pkgDoc.data();
+                if (data.name)
+                    planName = data.name;
+                if (typeof data.priceCents === "number")
+                    base = data.priceCents;
+            }
+            if (!base) {
+                res.status(400).json({ error: `Unknown package: ${packageId}` });
+                return;
+            }
+            // ── Performance add-on lookup ────────────────────────────────────────
+            let perfDropIn = PERFORMANCE_ADDON_CENTS["drop-in"];
+            let perfDefault = PERFORMANCE_ADDON_CENTS["default"];
+            try {
+                const perfDoc = await db.collection("packages").doc("performance-addon-config").get();
+                if (perfDoc.exists) {
+                    const d = perfDoc.data();
+                    if (typeof d.dropInCents === "number")
+                        perfDropIn = d.dropInCents;
+                    if (typeof d.defaultCents === "number")
+                        perfDefault = d.defaultCents;
+                }
+            }
+            catch (_a) { }
+            const perf = (addPerformance && packageId !== "performance-solo")
+                ? (packageId === "drop-in" ? perfDropIn : perfDefault)
+                : 0;
+            const months = (is8Week && packageId !== "drop-in") ? 2 : 1;
+            const subtotal = (base + perf) * months;
+            const eightWeekDiscount = (is8Week && packageId !== "drop-in") ? Math.round(subtotal * 0.10) : 0;
+            const afterEightWeek = subtotal - eightWeekDiscount;
+            const manualDiscountCents = Math.round(afterEightWeek * discount / 100);
+            const finalAmount = afterEightWeek - manualDiscountCents;
+            // ── Look up user by email (optional — record either way) ─────────────
+            const safeEmail = String(email).toLowerCase().trim();
+            let targetUid = null;
+            try {
+                const userRecord = await admin.auth().getUserByEmail(safeEmail);
+                targetUid = userRecord.uid;
+            }
+            catch (_b) {
+                targetUid = null; // user can claim grant once they sign up under this email
+            }
+            // ── Persist grant ───────────────────────────────────────────────────
+            const grantId = `manual_${(0, uuid_1.v4)()}`;
+            const addons = (addPerformance && packageId !== "performance-solo") ? ["Performance Add-on"] : [];
+            await db.collection("plan_purchases").doc(grantId).set({
+                paymentIntentId: grantId,
+                userId: targetUid,
+                email: safeEmail,
+                planName,
+                packageId: String(packageId),
+                amount: finalAmount,
+                baseAmount: subtotal,
+                eightWeekDiscount,
+                discountPercent: discount,
+                discountAmount: manualDiscountCents,
+                addons,
+                is8Week: Boolean(is8Week),
+                addPerformance: Boolean(addPerformance),
+                paymentMethod: String(paymentMethod || "cash"),
+                notes: String(notes || "").slice(0, 500),
+                grantedByAdmin: adminDecoded.email || adminDecoded.uid,
+                purchasedAt: admin.firestore.FieldValue.serverTimestamp(),
+                status: "confirmed",
+                manualGrant: true,
+            });
+            // ── Email notifications ─────────────────────────────────────────────
+            if (sendEmail !== false) {
+                try {
+                    const resend = initResend();
+                    const amountDollars = finalAmount / 100;
+                    await resend.emails.send({
+                        from: "Legacy Athlete <bookings@legacyathlete.fit>",
+                        to: [safeEmail],
+                        subject: `✅ Plan Activated – ${planName}`,
+                        html: buildPlanPurchaseEmail(safeEmail, planName, amountDollars, grantId, addons, Boolean(is8Week)),
+                    });
+                    await resend.emails.send({
+                        from: "Legacy Athlete Plans <bookings@legacyathlete.fit>",
+                        to: [COACH_EMAIL],
+                        subject: `📒 Manual Grant: ${safeEmail} – ${planName}${discount ? ` (${discount}% off)` : ""}`,
+                        html: buildCoachPlanEmail(safeEmail, `${planName}${discount ? ` (${discount}% off)` : ""}`, amountDollars, grantId, addons, Boolean(is8Week)),
+                    });
+                }
+                catch (emailErr) {
+                    console.error("[adminGrantPackage] Email send failed (non-fatal):", emailErr.message);
+                }
+            }
+            await auditLog("manual_package_grant", adminDecoded.uid, {
+                grantId,
+                targetEmail: safeEmail,
+                targetUid,
+                packageId,
+                planName,
+                subtotal,
+                eightWeekDiscount,
+                discountPercent: discount,
+                manualDiscountCents,
+                finalAmount,
+                is8Week,
+                addPerformance,
+                paymentMethod,
+            });
+            res.json({
+                success: true,
+                grantId,
+                userFound: targetUid !== null,
+                targetUid,
+                planName,
+                subtotal,
+                eightWeekDiscount,
+                discountAmount: manualDiscountCents,
+                finalAmount,
+            });
+        }
+        catch (error) {
+            console.error("adminGrantPackage error:", error);
+            res.status(500).json({ error: "Failed to grant package", details: error.message });
+        }
+    });
+});
+// ─── FUNCTION: adminRevokePackage ─────────────────────────────────────────────
+// Admin-only. Revokes a previously-issued manual grant by its grantId.
+// Only manual grants (manualGrant == true) can be revoked through this endpoint —
+// Stripe purchases must be refunded through Stripe, not deleted here.
+exports.adminRevokePackage = functions.https.onRequest({ invoker: "public" }, (req, res) => {
+    applyCors(req, res, async () => {
+        if (req.method !== "POST" && req.method !== "OPTIONS") {
+            res.status(405).json({ error: "Method not allowed" });
+            return;
+        }
+        const adminDecoded = await verifyAdminToken(req);
+        if (!adminDecoded) {
+            res.status(403).json({ error: "Forbidden: admin access required" });
+            return;
+        }
+        const { grantId } = req.body || {};
+        if (!grantId || typeof grantId !== "string") {
+            res.status(400).json({ error: "Missing grantId" });
+            return;
+        }
+        try {
+            const ref = db.collection("plan_purchases").doc(grantId);
+            const snap = await ref.get();
+            if (!snap.exists) {
+                res.status(404).json({ error: "Grant not found" });
+                return;
+            }
+            const data = snap.data();
+            if (data.manualGrant !== true) {
+                res.status(400).json({ error: "Only manual grants can be revoked via this endpoint" });
+                return;
+            }
+            await ref.update({
+                status: "revoked",
+                revokedAt: admin.firestore.FieldValue.serverTimestamp(),
+                revokedByAdmin: adminDecoded.email || adminDecoded.uid,
+            });
+            await auditLog("manual_package_revoke", adminDecoded.uid, {
+                grantId,
+                targetEmail: data.email,
+                targetUid: data.userId,
+                packageId: data.packageId,
+            });
+            res.json({ success: true });
+        }
+        catch (error) {
+            console.error("adminRevokePackage error:", error);
+            res.status(500).json({ error: "Failed to revoke grant", details: error.message });
+        }
+    });
+});
 // ─── AUTH TRIGGER: sendWelcomeEmail ──────────────────────────────────────────
 // Fires automatically whenever a new Firebase Auth user is created.
 // Sends a welcome email to the new athlete.
@@ -1646,7 +1856,7 @@ exports.sendWelcomeEmail = functionsV1.auth.user().onCreate(async (user) => {
     try {
         const resend = initResend();
         await resend.emails.send({
-            from: "Legacy Athlete <bookings@thelimitlessathlete.com>",
+            from: "Legacy Athlete <bookings@legacyathlete.fit>",
             to: [email.toLowerCase().trim()],
             subject: "Welcome to Legacy Athlete — You're In.",
             html: buildWelcomeEmail(email.toLowerCase().trim(), displayName),
