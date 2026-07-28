@@ -133,7 +133,17 @@ const Payment: React.FC<PaymentProps> = ({ initialPlanId, onLoginRequired }) => 
     }
   }, [initialPlanId]);
 
+  // Event RSVP is a flat one-time charge — clear any add-on/bundle selections.
+  useEffect(() => {
+    if (selectedPlanId === 'end-summer-camp') {
+      setAddPerformance(false);
+      setIs8WeekBundle(false);
+    }
+  }, [selectedPlanId]);
+
   const selectedPlan = PRICING_TIERS.find(t => t.id === selectedPlanId) || recommendedPlan;
+  // One-time event RSVP — no monthly billing, add-ons, or bundles apply.
+  const isEvent = selectedPlan.id === 'end-summer-camp';
 
   // Calculate totals
   const basePrice = parseFloat(selectedPlan.price);
@@ -343,13 +353,13 @@ const Payment: React.FC<PaymentProps> = ({ initialPlanId, onLoginRequired }) => 
                 >
                   {PRICING_TIERS.map(tier => (
                     <option key={tier.id} value={tier.id}>
-                      {tier.name} - ${tier.price}{tier.id !== 'drop-in' ? '/mo' : ''}
+                      {tier.name} - ${tier.price}{tier.id !== 'drop-in' && tier.id !== 'end-summer-camp' ? '/mo' : ''}
                     </option>
                   ))}
                 </select>
 
                 <div className="space-y-3 pt-4 border-t border-stone-800/50">
-                  {selectedPlan.id !== 'performance-solo' && (
+                  {selectedPlan.id !== 'performance-solo' && !isEvent && (
                     <label className="flex items-center space-x-3 cursor-pointer group">
                       <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${addPerformance ? 'bg-orange-500 border-orange-500' : 'border-stone-600 group-hover:border-orange-500'}`}>
                         {addPerformance && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -361,7 +371,7 @@ const Payment: React.FC<PaymentProps> = ({ initialPlanId, onLoginRequired }) => 
                     </label>
                   )}
 
-                  {selectedPlan.id !== 'drop-in' && (
+                  {selectedPlan.id !== 'drop-in' && !isEvent && (
                     <label className="flex items-center space-x-3 cursor-pointer group">
                       <div className={`w-5 h-5 border flex items-center justify-center transition-colors ${is8WeekBundle ? 'bg-orange-500 border-orange-500' : 'border-stone-600 group-hover:border-orange-500'}`}>
                         {is8WeekBundle && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
@@ -409,7 +419,7 @@ const Payment: React.FC<PaymentProps> = ({ initialPlanId, onLoginRequired }) => 
                   </div>
                   <div className="text-right">
                     <span className="font-athletic text-3xl text-white">${total.toFixed(2).replace(/\.00$/, '')}</span>
-                    <p className="text-[8px] text-stone-600 uppercase tracking-widest">USD {is8WeekBundle ? 'Paid in Full' : (selectedPlan.id === 'drop-in' ? 'One-Time' : 'Monthly')}</p>
+                    <p className="text-[8px] text-stone-600 uppercase tracking-widest">USD {is8WeekBundle ? 'Paid in Full' : ((selectedPlan.id === 'drop-in' || isEvent) ? 'One-Time' : 'Monthly')}</p>
                   </div>
                 </div>
               </div>

@@ -4,9 +4,14 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
+import QuickAccessHub from './components/QuickAccessHub';
+import MemberPortal from './components/MemberPortal';
+import SocialProof from './components/SocialProof';
+import WhyLegacyAthlete from './components/WhyLegacyAthlete';
 import Programs from './components/Programs';
 import Stats from './components/Stats';
 import BookingSystem from './components/BookingSystem';
+import FreeAssessmentForm from './components/FreeAssessmentForm';
 import Pricing from './components/Pricing';
 import Roadmap from './components/Roadmap';
 import Footer from './components/Footer';
@@ -21,6 +26,7 @@ import FAQ from './components/FAQ';
 import History from './components/History';
 import Location from './components/Location';
 import Payment from './components/Payment';
+import FinalCTA from './components/FinalCTA';
 import CancellationPage from './components/CancellationPage';
 import { useAuth } from './hooks/useAuth';
 import { auth } from './lib/firebase';
@@ -44,9 +50,19 @@ function App() {
   const isAdmin = useAdminClaim(user);
   useIdleLogout(!!user);
   const [showLogin, setShowLogin] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(true);
+  // Logged-in users land on the homepage (with the Member Portal section) by default,
+  // not the full-page dashboard — one click via "Console" opens the full dashboard.
+  // onLoginSuccess still sets this true so a fresh login goes straight into the console.
+  const [showDashboard, setShowDashboard] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(undefined);
   const [pendingScrollTarget, setPendingScrollTarget] = useState<string | null>(null);
+
+  // Admin claim resolves asynchronously after auth loads. When it comes back true,
+  // always route straight into the Admin Command Center — admins should never land
+  // on the public homepage by default, only regular members do.
+  useEffect(() => {
+    if (isAdmin) setShowDashboard(true);
+  }, [isAdmin]);
 
   // After leaving the dashboard with a pending scroll target, smooth-scroll to that section
   useEffect(() => {
@@ -135,21 +151,29 @@ function App() {
         isLoggedIn={!!user}
         onConsoleClick={handleConsoleClick}
       />
+
+      {/* Outcome */}
       <Hero />
+
+      {/* Quick Access: members reach booking/console in one click, new families start their journey */}
+      <QuickAccessHub isLoggedIn={!!user} onMemberAreaClick={user ? handleConsoleClick : handleLoginRequired} />
+
+      {/* Member Portal: real booking data for logged-in members, right on the homepage */}
+      {user && <MemberPortal onConsoleClick={handleConsoleClick} />}
+
+      {/* Proof: testimonials + real program stats */}
+      <SocialProof />
       <Stats />
-      
-      {/* The Problem / Solution */}
+
+      <Connector />
+
+      {/* The Problem / Why Athletes Plateau */}
       <TheGap />
 
       <Connector />
 
-      {/* Philosophy & Goals */}
-      <Philosophy />
-      
-      <Connector />
-
-      {/* Trackable Progress */}
-      <TrackableProgress />
+      {/* Why Legacy Athlete: four pillars + comparison */}
+      <WhyLegacyAthlete />
 
       <Connector />
 
@@ -176,9 +200,9 @@ function App() {
             </div>
           </div>
           <div className="relative aspect-video lg:aspect-square overflow-hidden rounded-lg group">
-             <img 
-               src="/images/013A5807-45.jpg" 
-               className="w-full h-full object-cover grayscale opacity-60 group-hover:scale-105 transition-transform duration-1000" 
+             <img
+               src="/images/013A5807-45.jpg"
+               className="w-full h-full object-cover grayscale opacity-60 group-hover:scale-105 transition-transform duration-1000"
                alt="Young Athlete Training"
              />
              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
@@ -191,25 +215,25 @@ function App() {
 
       <Connector />
 
-      <SummerCamp onSelectPlan={setSelectedPlanId} />
-
-      <Connector />
-
-      {/* What Happens */}
+      {/* Programs */}
       <Programs />
 
       <Connector />
 
-      {/* History / Naismith */}
-      <History />
-      
+      {/* Legacy Athlete App / Trackable Progress */}
+      <TrackableProgress />
+
       <Connector />
-      
+
+      <SummerCamp onSelectPlan={setSelectedPlanId} />
+
+      <Connector />
+
       {/* Location */}
       <Location />
 
       <Connector />
-      
+
       {/* Pricing / First Session Details */}
       <Pricing onSelectPlan={setSelectedPlanId} />
 
@@ -217,20 +241,54 @@ function App() {
 
       {/* What Happens After */}
       <Roadmap />
-      
+
       <Payment initialPlanId={selectedPlanId} onLoginRequired={handleLoginRequired} />
 
       <Connector />
 
-      <section id="apply" className="py-32 px-8 bg-black relative scroll-mt-20">
+      {/* Assessment (new families) — primary conversion point of the funnel */}
+      <section id="assessment" className="py-32 px-8 bg-black relative scroll-mt-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
           <div>
-            <span className="text-xs tracking-[0.4em] text-orange-500 uppercase mb-4 block">Book Now</span>
+            <span className="text-xs tracking-[0.4em] text-orange-500 uppercase mb-4 block">New Here?</span>
+            <h2 className="section-title font-athletic text-5xl md:text-8xl text-white mb-8 leading-none">
+              FREE ATHLETE <br /> ASSESSMENT
+            </h2>
+            <p className="text-stone-500 text-sm md:text-lg mb-12 leading-relaxed">
+              No cost, no pressure. Tell us about your athlete and we'll schedule a coached evaluation to find the right starting point.
+            </p>
+            <div className="space-y-6 border-t border-stone-900 pt-8">
+              <div className="flex items-start space-x-4">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mt-2" />
+                <p className="text-stone-400 text-xs uppercase tracking-widest">No Commitment Required</p>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mt-2" />
+                <p className="text-stone-400 text-xs uppercase tracking-widest">Coached Evaluation</p>
+              </div>
+              <div className="flex items-start space-x-4">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mt-2" />
+                <p className="text-stone-400 text-xs uppercase tracking-widest">Personalized Recommendation</p>
+              </div>
+            </div>
+          </div>
+
+          <FreeAssessmentForm />
+        </div>
+      </section>
+
+      <Connector />
+
+      {/* Member session booking — for athletes already in the program */}
+      <section id="apply" className="py-32 px-8 bg-black relative scroll-mt-32 border-t border-stone-900">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div>
+            <span className="text-xs tracking-[0.4em] text-orange-500 uppercase mb-4 block">Members: Book Now</span>
             <h2 className="section-title font-athletic text-5xl md:text-8xl text-white mb-8 leading-none">
               RESERVE YOUR <br /> SPOT
             </h2>
             <p className="text-stone-500 text-sm md:text-lg mb-12 leading-relaxed">
-              Select a time to come in for your first coached session. We'll handle the rest.
+              Select a time to come in for your next coached session. We'll handle the rest.
             </p>
             <div className="space-y-6 border-t border-stone-900 pt-8">
               <div className="flex items-start space-x-4">
@@ -247,7 +305,7 @@ function App() {
               </div>
             </div>
           </div>
-          
+
           <BookingSystem onLoginRequired={handleLoginRequired} />
         </div>
       </section>
@@ -256,6 +314,17 @@ function App() {
 
       {/* Parents FAQ */}
       <FAQ />
+
+      <Connector />
+
+      {/* Mission & Values — moved lower to reinforce trust after proof is established */}
+      <Philosophy />
+
+      <Connector />
+
+      <History />
+
+      <FinalCTA />
 
       <Footer onPortalClick={user ? handleConsoleClick : handleLoginRequired} />
     </main>

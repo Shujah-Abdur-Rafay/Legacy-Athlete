@@ -11,33 +11,18 @@ interface PricingProps {
   onSelectPlan: (planId: string) => void;
 }
 
-interface AddonConfig {
-  memberMonthly: number;
-  nonMemberMonthly: number;
-  singleSession: number;
-}
-
-const DEFAULT_ADDON: AddonConfig = { memberMonthly: 79, nonMemberMonthly: 99, singleSession: 35 };
-
 const Pricing: React.FC<PricingProps> = ({ onSelectPlan }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [tiers, setTiers] = useState<PricingTier[]>(PRICING_TIERS);
-  const [addon, setAddon] = useState<AddonConfig>(DEFAULT_ADDON);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'packages'), (snap) => {
       const list: (PricingTier & { order: number; active: boolean; hidden?: boolean })[] = [];
       snap.docs.forEach((d) => {
         const data: any = d.data();
-        if (d.id === 'performance-addon-config') {
-          setAddon({
-            memberMonthly: data.memberMonthly ?? DEFAULT_ADDON.memberMonthly,
-            nonMemberMonthly: data.nonMemberMonthly ?? DEFAULT_ADDON.nonMemberMonthly,
-            singleSession: data.singleSession ?? DEFAULT_ADDON.singleSession,
-          });
-          return;
-        }
+        // Add-on config doc is not a purchasable tier — skip it so it never renders as a card.
+        if (d.id === 'performance-addon-config') return;
         if (data.hidden || data.active === false) return;
         list.push({
           id: d.id,
@@ -171,51 +156,31 @@ const Pricing: React.FC<PricingProps> = ({ onSelectPlan }) => {
 
         <div className="mt-24 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-stone-900/30 border border-stone-800 p-8">
-            <h4 className="font-athletic text-2xl text-white mb-6 border-b border-stone-800 pb-4">PERFORMANCE ADD-ON</h4>
+            <h4 className="font-athletic text-2xl text-white mb-6 border-b border-stone-800 pb-4">SIBLING OPTIONS</h4>
             <ul className="space-y-4">
-              <li className="flex justify-between items-center">
-                <span className="text-xs text-stone-400 uppercase tracking-widest">Members</span>
-                <span className="font-athletic text-2xl text-white">${addon.memberMonthly}<span className="text-sm text-stone-500">/mo</span></span>
+              <li className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">10% Off Additional Siblings</span>
               </li>
-              <li className="flex justify-between items-center">
-                <span className="text-xs text-stone-400 uppercase tracking-widest">Non-Members</span>
-                <span className="font-athletic text-2xl text-white">${addon.nonMemberMonthly}<span className="text-sm text-stone-500">/mo</span></span>
-              </li>
-              <li className="flex justify-between items-center">
-                <span className="text-xs text-stone-400 uppercase tracking-widest">Single Session</span>
-                <span className="font-athletic text-2xl text-white">${addon.singleSession}</span>
+              <li className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">Shared Packages Allowed <br/><span className="text-[9px] text-stone-500">(Each visit counts per sibling)</span></span>
               </li>
             </ul>
           </div>
 
-          <div className="space-y-8">
-            <div className="bg-stone-900/30 border border-stone-800 p-8">
-              <h4 className="font-athletic text-2xl text-white mb-6 border-b border-stone-800 pb-4">SIBLING OPTIONS</h4>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
-                  <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">10% Off Additional Siblings</span>
-                </li>
-                <li className="flex items-start">
-                  <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
-                  <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">Shared Packages Allowed <br/><span className="text-[9px] text-stone-500">(Each visit counts per sibling)</span></span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-stone-900/30 border border-stone-800 p-8">
-              <h4 className="font-athletic text-2xl text-white mb-6 border-b border-stone-800 pb-4">PROGRAM PERKS</h4>
-              <ul className="space-y-4">
-                <li className="flex items-start">
-                  <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
-                  <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">8-Week Bundle: 10% Off <span className="text-[9px] text-stone-500">(paid in full)</span></span>
-                </li>
-                <li className="flex items-start">
-                  <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
-                  <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">Affiliate Program: Earn 10% Recurring Commission on Memberships</span>
-                </li>
-              </ul>
-            </div>
+          <div className="bg-stone-900/30 border border-stone-800 p-8">
+            <h4 className="font-athletic text-2xl text-white mb-6 border-b border-stone-800 pb-4">PROGRAM PERKS</h4>
+            <ul className="space-y-4">
+              <li className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">8-Week Bundle: 10% Off <span className="text-[9px] text-stone-500">(paid in full)</span></span>
+              </li>
+              <li className="flex items-start">
+                <div className="w-1.5 h-1.5 bg-orange-600 rounded-full mr-3 mt-1.5 flex-shrink-0"></div>
+                <span className="text-xs text-stone-400 uppercase tracking-widest leading-relaxed">Affiliate Program: Earn 10% Recurring Commission on Memberships</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

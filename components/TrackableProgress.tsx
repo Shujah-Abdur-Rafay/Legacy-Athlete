@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { ArrowUpRight } from 'lucide-react';
+import AppShowcase from './AppShowcase';
+import { ATHLETE_APP_URL } from '../constants';
 
 const TrackableProgress: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -49,10 +52,31 @@ const TrackableProgress: React.FC = () => {
                   </li>
                 ))}
               </ul>
+
+              <div className="mt-10">
+                <a
+                  href={ATHLETE_APP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Launch the Legacy Athlete app (opens in a new tab)"
+                  className="group inline-flex items-center gap-3 bg-orange-600 text-white px-9 py-4 rounded-full text-[10px] uppercase tracking-[0.3em] font-bold shadow-[0_0_30px_rgba(234,88,12,0.25)] hover:bg-orange-500 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+                >
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-white opacity-75 motion-safe:animate-ping" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                  </span>
+                  Launch the Athlete App
+                  <ArrowUpRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </a>
+                {/* Kills the "app" = App Store download assumption before it forms. */}
+                <p className="text-stone-600 text-[9px] uppercase tracking-[0.25em] mt-4">
+                  Opens in your browser · No download required
+                </p>
+              </div>
             </div>
             
-            <div className="relative aspect-square md:aspect-video lg:aspect-square bg-black border border-stone-800 rounded-lg overflow-hidden flex items-center justify-center">
-              <div className="absolute inset-0 bg-[url('/images/trainheroic-2048x1152.png')] bg-cover bg-center opacity-40"></div>
+            <div className="relative aspect-square md:aspect-video lg:aspect-square bg-gradient-to-b from-zinc-950 to-black border border-stone-800 rounded-lg overflow-hidden flex items-center justify-center p-4">
+              <AppShowcase />
             </div>
           </div>
         </div>

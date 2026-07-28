@@ -17,14 +17,16 @@ const Hero: React.FC = () => {
 
     gsap.set(headlineRef.current, { y: 120, opacity: 0, filter: 'blur(30px)' });
     gsap.set(ctaRef.current, { y: 60, opacity: 0 });
-    gsap.set(ballContainerRef.current, { scale: 0.7, opacity: 0 });
+    // Rests at 1.06 rather than 1 so the mouse-parallax drift below never
+    // exposes an edge of the full-bleed image.
+    gsap.set(ballContainerRef.current, { scale: 1.18, opacity: 0 });
     gsap.set(glowRef.current, { opacity: 0, scale: 0.4 });
 
-    tl.to(ballContainerRef.current, { 
-      scale: 1, 
-      opacity: 1, 
-      duration: 3, 
-      ease: "expo.out" 
+    tl.to(ballContainerRef.current, {
+      scale: 1.06,
+      opacity: 1,
+      duration: 3,
+      ease: "expo.out"
     })
     .to(glowRef.current, {
       opacity: 1,
@@ -52,11 +54,12 @@ const Hero: React.FC = () => {
       onUpdate: (self) => {
         const progress = self.progress;
         
-        // Deep Zoom: The ball background scales up massively
+        // Slow push-in as the hero exits. The old 7x zoom was tuned for a
+        // circular crop; a full-bleed photo only needs a subtle drift.
         gsap.set(ballContainerRef.current, {
-          scale: 1 + (progress * 6),
-          opacity: 1 - (progress * 1.5),
-          y: progress * 200
+          scale: 1.06 + (progress * 0.5),
+          opacity: 1 - (progress * 1.3),
+          y: progress * 120
         });
         
         // Glow expansion
@@ -118,25 +121,38 @@ const Hero: React.FC = () => {
         }}
       />
 
-      {/* Main Visual: Weathered Basketball Background */}
-      <div 
+      {/* Main Visual: full-bleed team poster */}
+      <div
         ref={ballContainerRef}
-        className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none"
+        className="absolute inset-0 z-10 pointer-events-none"
       >
-        <div className="relative w-[60vh] h-[60vh] md:w-[75vh] md:h-[75vh]">
-          <img 
-            src="/images/013A6138-9.jpg" 
-            alt="Legacy Focus"
-            className="w-full h-full object-cover rounded-full shadow-2xl brightness-[0.8] contrast-[1.6] grayscale-[0.1]"
-          />
-          <div className="absolute inset-0 rounded-full shadow-[inset_0_0_120px_rgba(0,0,0,1)]" />
-          <div className="absolute inset-0 rounded-full shadow-[0_0_100px_rgba(255,80,0,0.4),inset_0_0_40px_rgba(255,80,0,0.3)]" />
-          <div className="absolute inset-0 rounded-full opacity-40 mix-blend-soft-light bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-        </div>
+        <img
+          src="/images/hero-legacy.jpg"
+          alt="Legacy athletes training"
+          /* LCP image — load eagerly rather than lazily. */
+          loading="eager"
+          fetchPriority="high"
+          className="w-full h-full object-cover object-center"
+        />
+
+        {/* Darkest through the centre, where the headline sits and where the
+            poster carries its own LEGACY wordmark. Keeps the athletes at the
+            edges readable without two competing wordmarks stacked up. */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(ellipse 75% 60% at 50% 45%, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.66) 45%, rgba(0,0,0,0.45) 100%)'
+          }}
+        />
+
+        {/* Blends the photo into the black page above and below. */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black" />
       </div>
 
-      {/* Content Overlay */}
-      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center">
+      {/* Content Overlay — offset below the fixed header (utility bar + nav)
+          rather than inset-0, so the eyebrow never sits underneath it. */}
+      <div className="absolute inset-x-0 top-[6.5rem] bottom-0 z-20 flex flex-col items-center justify-center px-6 text-center">
         <div className="mb-10 overflow-hidden">
           <span className="block text-[10px] md:text-xs tracking-[1em] text-orange-600 uppercase font-bold drop-shadow-[0_0_15px_rgba(255,69,0,0.5)]">
             TRUE ATHLETIC DEVELOPMENT
@@ -156,28 +172,33 @@ const Hero: React.FC = () => {
             We promote creativity, intrinsic motivation, and character development of young athletes—going far beyond wins and losses.
           </p>
           
-          <div className="mt-8 flex flex-col md:flex-row items-center justify-center space-y-10 md:space-y-0 md:space-x-20">
-            <MagneticButton 
+          <div className="mt-8 flex flex-col md:flex-row items-center justify-center space-y-6 md:space-y-0 md:space-x-8">
+            <MagneticButton
               className="w-full md:w-auto !px-16 !py-6 text-xl !bg-white !text-black hover:!bg-orange-600 hover:!text-white shadow-[0_0_80px_rgba(255,255,255,0.08)]"
+              onClick={() => document.getElementById('assessment')?.scrollIntoView({behavior: 'smooth'})}
+            >
+              BOOK YOUR FREE ASSESSMENT
+            </MagneticButton>
+
+            <MagneticButton
+              type="secondary"
+              className="w-full md:w-auto !px-16 !py-6 text-xl"
               onClick={() => document.getElementById('apply')?.scrollIntoView({behavior: 'smooth'})}
             >
-              BOOK A SESSION
+              BOOK MEMBER SESSION
             </MagneticButton>
-            
-            <button 
-              onClick={() => document.getElementById('session')?.scrollIntoView({behavior: 'smooth'})}
-              className="group flex items-center space-x-6 text-[12px] uppercase tracking-[0.3em] text-stone-600 hover:text-white transition-all duration-1000"
-            >
-              <div className="w-12 h-12 rounded-full border border-stone-900 flex items-center justify-center group-hover:border-orange-600 group-hover:bg-orange-600/5 transition-all duration-1000">
-                <svg className="w-5 h-5 text-orange-600 translate-x-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              </div>
-              <span className="border-b border-transparent group-hover:border-orange-600 pb-2">VIEW SCHEDULE</span>
-            </button>
           </div>
+
+          <button
+            onClick={() => document.getElementById('weekly-schedule')?.scrollIntoView({behavior: 'smooth'})}
+            className="group mt-10 flex items-center space-x-4 text-[10px] uppercase tracking-[0.3em] text-stone-600 hover:text-white transition-all duration-700 mx-auto"
+          >
+            <span className="border-b border-transparent group-hover:border-orange-600 pb-1">View Weekly Schedule</span>
+          </button>
         </div>
       </div>
 
-      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center opacity-40">
+      <div className="absolute bottom-16 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center opacity-40 pointer-events-none">
         <div className="w-px h-28 bg-gradient-to-b from-orange-600 via-orange-500/30 to-transparent"></div>
         <span className="text-[8px] tracking-[1.2em] text-stone-800 uppercase mt-8 ml-3">Start Now</span>
       </div>

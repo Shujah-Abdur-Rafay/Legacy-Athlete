@@ -61,6 +61,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Free athlete assessment leads: admin read-only; backend-only writes ───
+    match /assessments/{assessmentId} {
+      allow read:  if isAdmin();
+      allow write: if false; // Cloud Functions only (submitAssessment)
+    }
+
     // ── Settings (calendar_auth, shared_calendar, etc.): admin only ───────────
     match /settings/{docId} {
       allow read:  if isAdmin();

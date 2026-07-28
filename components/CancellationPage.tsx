@@ -1,5 +1,8 @@
 import React, {useState, useEffect} from "react";
 
+// Temporary: mw@legacyathlete.com isn't set up yet, routing to his Gmail for now.
+const COACH_EMAIL = "m.waite11@gmail.com";
+
 const API_BASE = import.meta.env.VITE_FUNCTIONS_URL || "";
 const getApiUrl = (endpoint: string) => API_BASE ? `${API_BASE}/${endpoint}` : `/api/${endpoint}`;
 
@@ -110,7 +113,7 @@ const CancellationPage: React.FC = () => {
       <div className={baseStyles}>
         <div className="text-center max-w-sm">
           <h2 className="font-athletic text-2xl text-white mb-3">Something Went Wrong</h2>
-          <p className="text-stone-400 text-sm mb-4">Please try again or contact us at mw@thelimitlessathlete.com</p>
+          <p className="text-stone-400 text-sm mb-4">Please try again or contact us at {COACH_EMAIL}</p>
           <a href="/" className="text-orange-500 text-xs uppercase tracking-widest underline">Return to Home</a>
         </div>
       </div>
