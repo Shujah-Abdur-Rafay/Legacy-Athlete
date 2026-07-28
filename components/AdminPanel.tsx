@@ -24,22 +24,6 @@ interface Booking {
   cancellation_token: string;
 }
 
-interface Assessment {
-  id: string;
-  athlete_name: string;
-  grade: string;
-  school: string;
-  level: string;
-  commitment: string;
-  preferred_date: Timestamp;
-  parent_name: string;
-  parent_email: string;
-  parent_phone: string;
-  notes: string;
-  status: string;
-  submitted_at: Timestamp;
-}
-
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const FN_BASE = import.meta.env.VITE_FUNCTIONS_URL || '';
@@ -107,55 +91,11 @@ const BookingRow: React.FC<{ booking: Booking }> = ({ booking }) => {
   );
 };
 
-// ─── Assessment Row ───────────────────────────────────────────────────────────
-const AssessmentRow: React.FC<{ assessment: Assessment }> = ({ assessment }) => {
-  const preferredDate = assessment.preferred_date?.toDate();
-  const submittedAt = assessment.submitted_at?.toDate();
-
-  return (
-    <tr className="group hover:bg-stone-900/60 transition-colors border-b border-stone-900/60">
-      <td className="py-5 pr-6">
-        <p className="text-[11px] text-stone-400 tracking-wider">
-          {submittedAt ? format(submittedAt, 'MMM d') : '—'}
-        </p>
-        <p className="text-[9px] text-stone-700 tracking-widest">
-          {submittedAt ? format(submittedAt, 'HH:mm') : ''}
-        </p>
-      </td>
-      <td className="py-5 pr-6">
-        <p className="text-[12px] text-white uppercase tracking-widest font-medium">{assessment.athlete_name}</p>
-        <p className="text-[10px] text-stone-600 mt-0.5">{assessment.grade} · {assessment.school}</p>
-      </td>
-      <td className="py-5 pr-6">
-        <p className="text-[11px] text-white uppercase tracking-wide">{assessment.level}</p>
-        <p className="text-[10px] text-orange-600 uppercase tracking-tighter mt-0.5">{assessment.commitment}</p>
-      </td>
-      <td className="py-5 pr-6">
-        <p className="text-[11px] text-white uppercase tracking-wide">
-          {preferredDate ? format(preferredDate, 'EEE, MMM d') : '—'}
-        </p>
-      </td>
-      <td className="py-5 pr-6">
-        <p className="text-[12px] text-stone-300 tracking-wider">{assessment.parent_name}</p>
-        <p className="text-[10px] text-stone-600 lowercase mt-0.5">{assessment.parent_email}</p>
-        {assessment.parent_phone && <p className="text-[10px] text-stone-600 mt-0.5">{assessment.parent_phone}</p>}
-      </td>
-      <td className="py-5 pr-6">
-        <span className="inline-flex w-fit px-2.5 py-1 text-[8px] tracking-widest uppercase rounded-sm font-medium bg-yellow-500/15 text-yellow-400">
-          {assessment.status || 'new'}
-        </span>
-      </td>
-    </tr>
-  );
-};
-
 // ─── Main AdminPanel ──────────────────────────────────────────────────────────
 const AdminPanel: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [assessmentsLoading, setAssessmentsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'bookings' | 'assessments' | 'calendar' | 'schedule' | 'packages' | 'grants' | 'analytics'>('bookings');
+  const [activeTab, setActiveTab] = useState<'bookings' | 'calendar' | 'schedule' | 'packages' | 'grants' | 'analytics'>('bookings');
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -169,20 +109,7 @@ const AdminPanel: React.FC = () => {
     setLoading(false);
   }, []);
 
-  const fetchAssessments = useCallback(async () => {
-    setAssessmentsLoading(true);
-    try {
-      const q = query(collection(db, 'assessments'), orderBy('submitted_at', 'desc'));
-      const snap = await getDocs(q);
-      setAssessments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Assessment)));
-    } catch (err) {
-      console.error('Error fetching assessments:', err);
-    }
-    setAssessmentsLoading(false);
-  }, []);
-
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
-  useEffect(() => { fetchAssessments(); }, [fetchAssessments]);
 
   const totalRevenue = bookings
     .filter(b => b.payment_status === 'paid' || b.payment_status === 'succeeded')
@@ -192,7 +119,6 @@ const AdminPanel: React.FC = () => {
 
   const tabs = [
     { id: 'bookings', label: 'Bookings' },
-    { id: 'assessments', label: 'Assessments' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'packages', label: 'Packages' },
     { id: 'grants', label: 'Manual Grants' },
@@ -312,63 +238,6 @@ const AdminPanel: React.FC = () => {
                         </thead>
                         <tbody>
                           {bookings.map(b => <BookingRow key={b.id} booking={b} />)}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── Assessments Tab ── */}
-            {activeTab === 'assessments' && (
-              <div className="space-y-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Stat label="Total Requests" value={assessments.length} sub="All time" />
-                  <Stat label="New" value={assessments.filter(a => (a.status || 'new') === 'new').length} sub="Not yet contacted" accent />
-                  <Stat label="This Week" value={assessments.filter(a => {
-                    const d = a.submitted_at?.toDate();
-                    return d && (Date.now() - d.getTime()) < 7 * 24 * 60 * 60 * 1000;
-                  }).length} sub="Submitted" />
-                  <Stat label="Unique Families" value={new Set(assessments.map(a => a.parent_email)).size} sub="Distinct emails" />
-                </div>
-
-                <div className="bg-stone-950 border border-stone-800">
-                  <div className="flex justify-between items-center px-8 py-6 border-b border-stone-900">
-                    <h2 className="font-athletic text-lg tracking-widest text-white">FREE ASSESSMENT REQUESTS</h2>
-                    <button
-                      onClick={fetchAssessments}
-                      className="text-[9px] text-stone-600 hover:text-white uppercase tracking-[0.3em] transition-colors flex items-center space-x-2"
-                    >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                      </svg>
-                      <span>Refresh</span>
-                    </button>
-                  </div>
-
-                  {assessmentsLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                      <div className="w-8 h-8 border-2 border-stone-800 border-t-orange-600 rounded-full animate-spin" />
-                    </div>
-                  ) : assessments.length === 0 ? (
-                    <div className="py-20 text-center">
-                      <p className="text-stone-700 text-[11px] uppercase tracking-[0.3em]">No assessment requests yet</p>
-                    </div>
-                  ) : (
-                    <div className="px-8 overflow-x-auto">
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-stone-900">
-                            {['Submitted', 'Athlete', 'Level / Commitment', 'Preferred Date', 'Parent', 'Status'].map(h => (
-                              <th key={h} className="text-left py-4 pr-6 text-[9px] text-stone-600 uppercase tracking-[0.3em] font-normal">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {assessments.map(a => <AssessmentRow key={a.id} assessment={a} />)}
                         </tbody>
                       </table>
                     </div>

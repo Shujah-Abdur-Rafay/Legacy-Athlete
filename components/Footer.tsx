@@ -1,19 +1,9 @@
 
 import React from 'react';
-import { ArrowUpRight } from 'lucide-react';
-import { ATHLETE_APP_URL } from '../constants';
 
 interface FooterProps {
   onPortalClick?: () => void;
 }
-
-// Temporary: mw@legacyathlete.com isn't set up yet, routing to his Gmail for now.
-const COACH_EMAIL = 'm.waite11@gmail.com';
-
-const scrollTo = (id: string) => (e: React.MouseEvent) => {
-  e.preventDefault();
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-};
 
 const Footer: React.FC<FooterProps> = ({ onPortalClick }) => {
   return (
@@ -33,14 +23,9 @@ const Footer: React.FC<FooterProps> = ({ onPortalClick }) => {
           <div>
             <h4 className="text-[10px] tracking-[0.3em] uppercase text-stone-300 mb-6">Explore</h4>
             <ul className="space-y-4">
-              {[
-                { label: 'Programs', id: 'session' },
-                { label: 'About', id: 'mission' },
-                { label: 'Results', id: 'results' },
-                { label: 'Schedule', id: 'weekly-schedule' },
-              ].map(item => (
-                <li key={item.id}>
-                  <a href={`#${item.id}`} onClick={scrollTo(item.id)} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">{item.label}</a>
+              {['Session', 'About', 'Legacy', 'Contact'].map(item => (
+                <li key={item}>
+                  <a href="#" className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">{item}</a>
                 </li>
               ))}
             </ul>
@@ -52,34 +37,21 @@ const Footer: React.FC<FooterProps> = ({ onPortalClick }) => {
                 <button onClick={onPortalClick} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Login</button>
               </li>
               <li>
-                <a
-                  href={ATHLETE_APP_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Open the Live Athlete App (opens in a new tab)"
-                  className="group inline-flex items-center gap-1.5 text-orange-500 hover:text-orange-400 text-[10px] uppercase tracking-[0.2em] font-medium transition-colors"
-                >
-                  Live Athlete App
-                  <ArrowUpRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </a>
+                <button className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Support</button>
               </li>
               <li>
-                <a href={`mailto:${COACH_EMAIL}`} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Support</a>
-              </li>
-              <li>
-                <a href="#assessment" onClick={scrollTo('assessment')} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Free Assessment</a>
+                <button className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Curriculum</button>
               </li>
             </ul>
           </div>
           <div className="hidden md:block">
-            <h4 className="text-[10px] tracking-[0.3em] uppercase text-stone-300 mb-6">Contact</h4>
+            <h4 className="text-[10px] tracking-[0.3em] uppercase text-stone-300 mb-6">Social</h4>
             <ul className="space-y-4">
-              <li>
-                <a href={`mailto:${COACH_EMAIL}`} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">{COACH_EMAIL}</a>
-              </li>
-              <li>
-                <a href="#location" onClick={scrollTo('location')} className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">Pilsen, Chicago</a>
-              </li>
+              {['Instagram', 'YouTube', 'Journal'].map(item => (
+                <li key={item}>
+                  <a href="#" className="text-stone-500 hover:text-white text-[10px] uppercase tracking-[0.2em] transition-colors">{item}</a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>

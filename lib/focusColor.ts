@@ -1,5 +1,4 @@
 export const focusColor = (focus: string): string => {
-  if (focus.includes("Skills + Performance")) return "text-orange-500";
   if (focus.includes("Speed & Agility")) return "text-amber-500";
   if (focus.includes("Total Skills")) return "text-emerald-500";
   if (focus.includes("Strength + Power")) return "text-rose-500";
@@ -12,7 +11,6 @@ export const focusColor = (focus: string): string => {
 };
 
 export const focusDotColor = (focus: string): string => {
-  if (focus.includes("Skills + Performance")) return "bg-orange-500";
   if (focus.includes("Speed & Agility")) return "bg-amber-500";
   if (focus.includes("Total Skills")) return "bg-emerald-500";
   if (focus.includes("Strength + Power")) return "bg-rose-500";

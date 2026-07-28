@@ -25,7 +25,7 @@ const TheGap: React.FC = () => {
     <section ref={sectionRef} className="py-32 px-8 bg-black relative border-t border-stone-900">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-20 gap-item">
-          <span className="text-[10px] tracking-[0.4em] text-orange-500 uppercase block mb-4">Why Athletes Plateau</span>
+          <span className="text-[10px] tracking-[0.4em] text-orange-500 uppercase block mb-4">The Problem</span>
           <h2 className="font-athletic text-5xl md:text-7xl text-white mb-6">
             WHAT'S MISSING IN <br className="hidden md:block" />
             <span className="text-stone-500">YOUTH DEVELOPMENT</span>
@@ -35,27 +35,23 @@ const TheGap: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-24">
           {[
             {
               title: "TOO MANY GAMES",
               desc: "Constant tournaments with no time to actually develop skills or correct mistakes."
             },
             {
-              title: "RANDOM DRILLS",
-              desc: "Practice without a structured plan behind it, so skills don't build on each other."
+              title: "NO RECOVERY",
+              desc: "Zero structure for physical recovery, leading to burnout and overuse injuries."
             },
             {
-              title: "NO ATHLETIC DEVELOPMENT",
-              desc: "Zero structure for speed, strength, or recovery, leading to burnout and overuse injuries."
+              title: "NO FUNDAMENTALS",
+              desc: "Lack of emphasis on core mechanics, footwork, and real-time decision making."
             },
             {
-              title: "NO ACCOUNTABILITY",
-              desc: "No one tracking effort, attendance, or coachability over time."
-            },
-            {
-              title: "NO MEASURABLE PROGRESS",
-              desc: "Improvement is assumed, never actually tracked session to session."
+              title: "LACK OF REPS",
+              desc: "Too many players on a team leads to a lack of experience and real-game reps."
             }
           ].map((item, i) => (
             <div key={i} className="gap-item bg-stone-900/30 border border-stone-800 p-8 hover:bg-stone-900/50 transition-colors group">

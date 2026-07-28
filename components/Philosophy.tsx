@@ -23,7 +23,10 @@ const Philosophy: React.FC = () => {
   }, []);
 
   return (
-    <section ref={sectionRef} id="mission" className="py-32 px-8 bg-stone-950 relative overflow-hidden scroll-mt-32">
+    <section ref={sectionRef} className="py-32 px-8 bg-stone-950 relative overflow-hidden">
+      {/* Background Noise */}
+      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
         
         {/* Philosophy Column */}

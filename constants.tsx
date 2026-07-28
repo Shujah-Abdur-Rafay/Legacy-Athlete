@@ -1,10 +1,6 @@
 
 import { Program, Principle, Stat, Testimonial, PricingTier } from './types';
 
-// Live Legacy Athlete app — members open this for workout tracking, progress
-// charts, and coach communication. External to this site (separate Firebase app).
-export const ATHLETE_APP_URL = 'https://fitness-app-7e42f.web.app/';
-
 export const PROGRAMS: Program[] = [
   {
     id: '01',
@@ -186,16 +182,43 @@ export const PRICING_TIERS: PricingTier[] = [
     cta: 'Subscribe'
   },
   {
-    id: 'end-summer-camp',
-    name: 'END OF SUMMER CAMP',
-    price: '75',
-    description: 'Mon, Sep 7 (Labor Day) • 9AM–3PM',
+    id: 'camp-weekly',
+    name: 'WEEKLY ACADEMY',
+    price: '249',
+    description: 'Summer Camp Full Access',
     features: [
-      'One-Day Camp',
-      'Skill + Performance Training',
-      'All Levels Welcome'
+      '15 Hours Structured Training',
+      'Skill + Movement Combined',
+      'Small-Sided Games',
+      'Strength & Mobility'
+    ],
+    recommended: true,
+    cta: 'Reserve Spot'
+  },
+  {
+    id: 'camp-early-bird',
+    name: 'EARLY BIRD',
+    price: '229',
+    description: 'Limited Time Offer',
+    features: [
+      'Full Academy Access',
+      'Discounted Rate',
+      'Priority Registration'
     ],
     recommended: false,
-    cta: 'RSVP'
+    cta: 'Reserve Spot'
+  },
+  {
+    id: 'camp-day-pass',
+    name: 'CAMP DAY PASS',
+    price: '65',
+    description: 'Single Day Access',
+    features: [
+      '3 Hours Training',
+      'Single Day Entry',
+      'Flexible Schedule'
+    ],
+    recommended: false,
+    cta: 'Book Day'
   }
 ];

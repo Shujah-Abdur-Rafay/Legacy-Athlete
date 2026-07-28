@@ -82,10 +82,6 @@
         "function": "checkCancellation"
       },
       {
-        "source": "/api/submitAssessment",
-        "function": "submitAssessment"
-      },
-      {
         "source": "/api/exchangeCalendarToken",
         "function": "exchangeCalendarToken"
       },

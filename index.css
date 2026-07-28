@@ -55,12 +55,3 @@ body {
 .focus-orange:focus {
   border-color: #ff4500 !important;
 }
-
-/* Gentle floating motion for the app showcase phones */
-@keyframes la-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .la-float-anim { animation: none !important; }
-}

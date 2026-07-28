@@ -2,20 +2,14 @@ import { collection, getDocs, writeBatch, doc, serverTimestamp, setDoc, getDoc, 
 import { db } from '../../lib/firebase';
 import { PRICING_TIERS, ROADMAP_STEPS } from '../../constants';
 
-// Mon/Tue/Thu evenings + Saturday morning. Keep in sync with functions/src/index.ts DEFAULT_SCHEDULE.
-const SKILLS_PERF_EVENING = [
-  { h: 17, m: 30, focus: 'Skills + Performance', duration: 90 },
-  { h: 18, m: 30, focus: 'Skills + Performance', duration: 90 },
-];
-
 const DEFAULT_SCHEDULE = [
   { day: 0, times: [] },
-  { day: 1, times: SKILLS_PERF_EVENING },
-  { day: 2, times: SKILLS_PERF_EVENING },
-  { day: 3, times: [] },
-  { day: 4, times: SKILLS_PERF_EVENING },
+  { day: 1, times: [{ h: 18, m: 30, focus: 'Speed & Agility (GS)', duration: 30 }, { h: 19, m: 0, focus: 'Total Skills/IQ/Gameplay (GS)', duration: 60 }] },
+  { day: 2, times: [{ h: 18, m: 30, focus: 'Strength + Power (GS)', duration: 30 }, { h: 19, m: 0, focus: 'Shooting (300+) (GS)', duration: 60 }] },
+  { day: 3, times: [{ h: 18, m: 30, focus: 'Mobility + Cond. (GS)', duration: 30 }, { h: 19, m: 0, focus: 'Ball Handling (GS)', duration: 60 }] },
+  { day: 4, times: [{ h: 18, m: 30, focus: 'Speed & Agility (GS)', duration: 30 }, { h: 19, m: 0, focus: 'Total Skills/IQ/Gameplay (GS)', duration: 60 }] },
   { day: 5, times: [] },
-  { day: 6, times: [{ h: 9, m: 0, focus: 'Skills + Performance', duration: 90 }] },
+  { day: 6, times: [{ h: 8, m: 0, focus: 'Select Practice (GS)', duration: 60 }, { h: 9, m: 0, focus: 'Strength + Power (GS)', duration: 30 }, { h: 9, m: 30, focus: 'Game prep: footwork and skills (GS)', duration: 60 }] },
 ];
 
 const PACKAGE_PRICE_CENTS: Record<string, number> = {

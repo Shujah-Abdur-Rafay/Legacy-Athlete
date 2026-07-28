@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendWelcomeEmail = exports.adminRevokePackage = exports.adminGrantPackage = exports.setAdminClaim = exports.stripeWebhook = exports.getSharedCalendarIdEndpoint = exports.getSharedCalendarEvents = exports.submitAssessment = exports.checkCancellation = exports.confirmPlanPurchase = exports.cancelBooking = exports.createBooking = exports.createPaymentIntent = exports.getSessions = exports.getCalendarStatus = exports.exchangeCalendarToken = void 0;
+exports.sendWelcomeEmail = exports.adminRevokePackage = exports.adminGrantPackage = exports.setAdminClaim = exports.stripeWebhook = exports.getSharedCalendarIdEndpoint = exports.getSharedCalendarEvents = exports.checkCancellation = exports.confirmPlanPurchase = exports.cancelBooking = exports.createBooking = exports.createPaymentIntent = exports.getSessions = exports.getCalendarStatus = exports.exchangeCalendarToken = void 0;
 const functions = __importStar(require("firebase-functions"));
 const functionsV1 = __importStar(require("firebase-functions/v1"));
 const admin = __importStar(require("firebase-admin"));
@@ -93,17 +93,14 @@ const db = admin.firestore();
 // ─── Constants ────────────────────────────────────────────────────────────────
 const CST_TIMEZONE = "America/Chicago";
 const MAX_ATTENDANCE = 12;
-// mw@legacyathlete.com is the intended long-term address but that mailbox
-// doesn't exist yet — client asked to route coach notifications to his
-// personal Gmail in the meantime (confirmed 2026-07-28).
-const COACH_EMAIL = "m.waite11@gmail.com";
+const COACH_EMAIL = "mw@thelimitlessathlete.com";
 // Training schedule (default fallback — used only when Firestore schedule_templates collection is empty)
-// Mon/Tue/Thu evenings + Saturday morning. Keep in sync with components/admin/seed.ts.
 const DEFAULT_SCHEDULE = [
-    { day: 1, times: [{ h: 17, m: 30, focus: "Skills + Performance", duration: 90 }, { h: 18, m: 30, focus: "Skills + Performance", duration: 90 }] },
-    { day: 2, times: [{ h: 17, m: 30, focus: "Skills + Performance", duration: 90 }, { h: 18, m: 30, focus: "Skills + Performance", duration: 90 }] },
-    { day: 4, times: [{ h: 17, m: 30, focus: "Skills + Performance", duration: 90 }, { h: 18, m: 30, focus: "Skills + Performance", duration: 90 }] },
-    { day: 6, times: [{ h: 9, m: 0, focus: "Skills + Performance", duration: 90 }] },
+    { day: 1, times: [{ h: 18, m: 30, focus: "Speed & Agility (GS)", duration: 30 }, { h: 19, m: 0, focus: "Total Skills/IQ/Gameplay (GS)", duration: 60 }] },
+    { day: 2, times: [{ h: 18, m: 30, focus: "Strength + Power (GS)", duration: 30 }, { h: 19, m: 0, focus: "Shooting (300+) (GS)", duration: 60 }] },
+    { day: 3, times: [{ h: 18, m: 30, focus: "Mobility + Cond. (GS)", duration: 30 }, { h: 19, m: 0, focus: "Ball Handling (GS)", duration: 60 }] },
+    { day: 4, times: [{ h: 18, m: 30, focus: "Speed & Agility (GS)", duration: 30 }, { h: 19, m: 0, focus: "Total Skills/IQ/Gameplay (GS)", duration: 60 }] },
+    { day: 6, times: [{ h: 8, m: 0, focus: "Select Practice (GS)", duration: 60 }, { h: 9, m: 0, focus: "Strength + Power (GS)", duration: 30 }, { h: 9, m: 30, focus: "Game prep: footwork and skills (GS)", duration: 60 }] },
 ];
 async function loadScheduleFromFirestore() {
     try {
@@ -251,7 +248,7 @@ function generateICS(sessionDate, endDate, athleteName, focus, bookingId) {
         `DTEND:${fmt(endDate)}`,
         `SUMMARY:Legacy Athlete Training - ${focus}`,
         `DESCRIPTION:Training session for ${athleteName}\\nFocus: ${focus}\\nBooking ID: ${bookingId}`,
-        "LOCATION:Legacy Athlete - 1338 W. Cermak Ave\\, Chicago\\, IL 60608",
+        "LOCATION:Legacy Athlete Training Facility",
         "STATUS:CONFIRMED",
         "BEGIN:VALARM",
         "TRIGGER:-PT1H",
@@ -538,126 +535,6 @@ function buildCancellationEmail(athleteName, sessionDate, focus) {
 </body>
 </html>`;
 }
-function buildAssessmentConfirmationEmail(parentName, athleteName, level, commitment, preferredDate) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Assessment Request Received – Legacy Athlete</title>
-<style>
-  body { margin: 0; padding: 0; background: #000; font-family: 'Helvetica Neue', Arial, sans-serif; }
-  .container { max-width: 560px; margin: 0 auto; background: #0a0a0a; border: 1px solid #1c1917; }
-  .header { background: #000; padding: 40px 40px 24px; border-bottom: 1px solid #1c1917; }
-  .logo { font-size: 11px; letter-spacing: 0.4em; color: #ea580c; text-transform: uppercase; margin-bottom: 8px; }
-  .headline { font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.02em; line-height: 1.2; margin: 0; }
-  .badge { display: inline-block; background: #ea580c; color: #fff; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; padding: 4px 12px; margin-top: 16px; }
-  .body-section { padding: 32px 40px; }
-  .greeting { color: #a8a29e; font-size: 14px; margin-bottom: 20px; line-height: 1.6; }
-  .detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #1c1917; }
-  .detail-label { font-size: 10px; color: #57534e; text-transform: uppercase; letter-spacing: 0.15em; }
-  .detail-value { font-size: 13px; color: #fff; font-weight: 600; text-align: right; }
-  .cta-section { padding: 24px 40px 32px; background: #111; border-top: 1px solid #1c1917; }
-  .footer { padding: 24px 40px; border-top: 1px solid #1c1917; }
-  .footer-text { color: #44403c; font-size: 10px; line-height: 1.6; }
-</style>
-</head>
-<body>
-<div class="container">
-  <div class="header">
-    <div class="logo">Legacy Athlete</div>
-    <h1 class="headline">ASSESSMENT<br>REQUEST RECEIVED.</h1>
-    <div class="badge">✓ We'll Be In Touch</div>
-  </div>
-  <div class="body-section">
-    <p class="greeting">Hey ${parentName}, thanks for requesting a free athlete assessment for ${athleteName}. A coach will reach out shortly to confirm a time.</p>
-    <div class="detail-row"><span class="detail-label">Athlete</span><span class="detail-value">${athleteName}</span></div>
-    <div class="detail-row"><span class="detail-label">Level</span><span class="detail-value">${level}</span></div>
-    <div class="detail-row"><span class="detail-label">Preferred Commitment</span><span class="detail-value">${commitment}</span></div>
-    <div class="detail-row" style="border-bottom: none;"><span class="detail-label">Preferred Date</span><span class="detail-value">${preferredDate}</span></div>
-  </div>
-  <div class="cta-section">
-    <p style="color: #57534e; font-size: 11px; margin: 0;">Questions in the meantime? Reach us at <a href="mailto:${COACH_EMAIL}" style="color:#ea580c;">${COACH_EMAIL}</a></p>
-  </div>
-  <div class="footer">
-    <p class="footer-text">© Legacy Athlete. This email was sent because a free athlete assessment was requested on our website.</p>
-  </div>
-</div>
-</body>
-</html>`;
-}
-function buildCoachAssessmentEmail(parentName, parentEmail, parentPhone, athleteName, grade, school, level, commitment, preferredDate, notes) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8">
-<style>
-  body { margin:0; background:#000; font-family:'Helvetica Neue',Arial,sans-serif; }
-  .c { max-width:560px; margin:0 auto; background:#0a0a0a; border:1px solid #1c1917; }
-  .h { background:#111; padding:32px 40px; border-bottom:1px solid #1c1917; }
-  .tag { font-size:9px; letter-spacing:0.4em; color:#ea580c; text-transform:uppercase; }
-  h1 { font-size:22px; color:#fff; margin:8px 0 0; }
-  .b { padding:32px 40px; }
-  .row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1c1917; }
-  .lbl { font-size:10px; color:#57534e; text-transform:uppercase; letter-spacing:0.15em; }
-  .val { font-size:13px; color:#fff; font-weight:600; text-align: right; }
-  .f { padding:20px 40px; border-top:1px solid #1c1917; }
-  .f p { color:#44403c; font-size:10px; }
-</style>
-</head>
-<body>
-<div class="c">
-  <div class="h"><div class="tag">🏀 New Free Assessment Request</div><h1>New Lead: ${athleteName}</h1></div>
-  <div class="b">
-    <div class="row"><span class="lbl">Athlete Name</span><span class="val">${athleteName}</span></div>
-    <div class="row"><span class="lbl">Grade</span><span class="val">${grade}</span></div>
-    <div class="row"><span class="lbl">School</span><span class="val">${school}</span></div>
-    <div class="row"><span class="lbl">Level</span><span class="val" style="color:#ea580c;">${level}</span></div>
-    <div class="row"><span class="lbl">Commitment</span><span class="val">${commitment}</span></div>
-    <div class="row"><span class="lbl">Preferred Date</span><span class="val">${preferredDate}</span></div>
-    <div class="row"><span class="lbl">Parent Name</span><span class="val">${parentName}</span></div>
-    <div class="row"><span class="lbl">Parent Email</span><span class="val">${parentEmail}</span></div>
-    <div class="row" style="border-bottom:none;"><span class="lbl">Parent Phone</span><span class="val">${parentPhone || "—"}</span></div>
-    ${notes ? `<div style="margin-top:16px;"><span class="lbl">Notes</span><p style="color:#d4ccc8;font-size:12px;margin-top:6px;">${notes}</p></div>` : ""}
-  </div>
-  <div class="f"><p>Legacy Athlete Assessment Requests — Auto-generated notification. Add ${athleteName} to a cohort once scheduled.</p></div>
-</div>
-</body>
-</html>`;
-}
-function buildNewSignupEmail(email, displayName, uid, provider) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="UTF-8">
-<style>
-  body { margin:0; background:#000; font-family:'Helvetica Neue',Arial,sans-serif; }
-  .c { max-width:560px; margin:0 auto; background:#0a0a0a; border:1px solid #1c1917; }
-  .h { background:#111; padding:32px 40px; border-bottom:1px solid #1c1917; }
-  .tag { font-size:9px; letter-spacing:0.4em; color:#ea580c; text-transform:uppercase; }
-  h1 { font-size:22px; color:#fff; margin:8px 0 0; }
-  .b { padding:32px 40px; }
-  .row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #1c1917; }
-  .lbl { font-size:10px; color:#57534e; text-transform:uppercase; letter-spacing:0.15em; }
-  .val { font-size:13px; color:#fff; font-weight:600; }
-  .mono { font-family:monospace; font-size:11px; color:#78716c; word-break:break-all; }
-  .f { padding:20px 40px; border-top:1px solid #1c1917; }
-  .f p { color:#44403c; font-size:10px; }
-</style>
-</head>
-<body>
-<div class="c">
-  <div class="h"><div class="tag">🆕 New User Signup</div><h1>New Account Created</h1></div>
-  <div class="b">
-    <div class="row"><span class="lbl">Name</span><span class="val">${displayName || "—"}</span></div>
-    <div class="row"><span class="lbl">Email</span><span class="val">${email}</span></div>
-    <div class="row"><span class="lbl">Sign-up Method</span><span class="val">${provider}</span></div>
-    <div class="row"><span class="lbl">Signed Up</span><span class="val">${new Date().toLocaleString("en-US", { timeZone: CST_TIMEZONE, dateStyle: "medium", timeStyle: "short" })} CST</span></div>
-    <div class="row" style="border-bottom:none;"><span class="lbl">User ID</span><span class="mono">${uid}</span></div>
-  </div>
-  <div class="f"><p>Legacy Athlete Platform — Auto-generated notification. Add this athlete to a cohort.</p></div>
-</div>
-</body>
-</html>`;
-}
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 // Removed manual setCorsHeaders in favor of cors package
 // ─── FUNCTION 0: exchangeCalendarToken ────────────────────────────────────────
@@ -817,7 +694,6 @@ const PLAN_PRICES_CENTS = {
     "camp-weekly": 24900, // $249
     "camp-early-bird": 22900, // $229
     "camp-day-pass": 6500, // $65
-    "end-summer-camp": 7500, // $75 — one-day Labor Day event RSVP
 };
 const PERFORMANCE_ADDON_CENTS = {
     "drop-in": 3500, // $35
@@ -1411,99 +1287,6 @@ exports.checkCancellation = functions.https.onRequest((req, res) => {
         }
     });
 });
-// ─── FUNCTION 6b: submitAssessment ───────────────────────────────────────────
-// Public lead-capture endpoint for the free athlete assessment form. No auth
-// required — this is the entry point for prospective families who don't yet
-// have an account. Writes to `assessments`, emails the parent a confirmation,
-// and notifies the coach so the athlete can be added to a cohort.
-const VALID_LEVELS = ["Beginner", "Intermediate"];
-const VALID_COMMITMENTS = ["1x per week", "2x per week", "3x per week"];
-exports.submitAssessment = functions.https.onRequest((req, res) => {
-    applyCors(req, res, async () => {
-        if (req.method !== "POST" && req.method !== "OPTIONS") {
-            res.status(405).json({ error: "Method not allowed" });
-            return;
-        }
-        const { athleteName, grade, school, level, commitment, preferredDate, parentName, parentEmail, parentPhone, notes, } = req.body || {};
-        if (!athleteName || !grade || !school || !level || !commitment || !preferredDate || !parentName || !parentEmail) {
-            res.status(400).json({ error: "Missing required fields" });
-            return;
-        }
-        if (!isValidEmail(String(parentEmail))) {
-            res.status(400).json({ error: "Invalid parent email address" });
-            return;
-        }
-        if (!VALID_LEVELS.includes(String(level))) {
-            res.status(400).json({ error: "Invalid level" });
-            return;
-        }
-        if (!VALID_COMMITMENTS.includes(String(commitment))) {
-            res.status(400).json({ error: "Invalid commitment" });
-            return;
-        }
-        const preferredDateObj = new Date(String(preferredDate));
-        if (isNaN(preferredDateObj.getTime())) {
-            res.status(400).json({ error: "Invalid preferred date" });
-            return;
-        }
-        const safeParentEmail = String(parentEmail).toLowerCase().trim();
-        // ── Rate limiting: max 3 assessment requests per email per hour ──────────
-        const allowed = await checkRateLimit(`assessment:${safeParentEmail}`, 3, 3600);
-        if (!allowed) {
-            res.status(429).json({ error: "Too many requests. Please try again later." });
-            return;
-        }
-        const safeAthleteName = sanitizeName(String(athleteName));
-        const safeGrade = sanitizeName(String(grade)).slice(0, 40);
-        const safeSchool = sanitizeName(String(school)).slice(0, 100);
-        const safeParentName = sanitizeName(String(parentName));
-        const safeParentPhone = parentPhone ? sanitizeName(String(parentPhone)).slice(0, 30) : "";
-        const safeNotes = notes ? sanitizeName(String(notes)).slice(0, 500) : "";
-        const preferredDateLabel = (0, date_fns_1.format)(preferredDateObj, "EEEE, MMMM do, yyyy");
-        try {
-            const assessmentId = (0, uuid_1.v4)();
-            await db.collection("assessments").doc(assessmentId).set({
-                id: assessmentId,
-                athlete_name: safeAthleteName,
-                grade: safeGrade,
-                school: safeSchool,
-                level: String(level),
-                commitment: String(commitment),
-                preferred_date: admin.firestore.Timestamp.fromDate(preferredDateObj),
-                parent_name: safeParentName,
-                parent_email: safeParentEmail,
-                parent_phone: safeParentPhone,
-                notes: safeNotes,
-                status: "new",
-                submitted_at: admin.firestore.FieldValue.serverTimestamp(),
-            });
-            try {
-                const resend = initResend();
-                await resend.emails.send({
-                    from: "Legacy Athlete <bookings@legacyathlete.fit>",
-                    to: [safeParentEmail],
-                    subject: "✅ Assessment Request Received – Legacy Athlete",
-                    html: buildAssessmentConfirmationEmail(safeParentName, safeAthleteName, String(level), String(commitment), preferredDateLabel),
-                });
-                await resend.emails.send({
-                    from: "Legacy Athlete Leads <bookings@legacyathlete.fit>",
-                    to: [COACH_EMAIL],
-                    subject: `🏀 New Free Assessment: ${safeAthleteName} (${grade})`,
-                    html: buildCoachAssessmentEmail(safeParentName, safeParentEmail, safeParentPhone, safeAthleteName, safeGrade, safeSchool, String(level), String(commitment), preferredDateLabel, safeNotes),
-                });
-            }
-            catch (emailErr) {
-                console.error("[submitAssessment] Email send failed (non-fatal):", emailErr.message);
-            }
-            await auditLog("assessment_submitted", "public", { assessmentId, parentEmail: safeParentEmail, athleteName: safeAthleteName });
-            res.json({ success: true, assessmentId, message: "Assessment request received!" });
-        }
-        catch (error) {
-            console.error("submitAssessment error:", error);
-            res.status(500).json({ error: "Failed to submit assessment request", details: error.message });
-        }
-    });
-});
 // ─── FUNCTION 7: getSharedCalendarEvents ─────────────────────────────────────
 // Returns all events from the shared Google Calendar for the next 3 months.
 // Called by both admin and user dashboards for the unified calendar view.
@@ -2062,44 +1845,26 @@ exports.adminRevokePackage = functions.https.onRequest({ invoker: "public" }, (r
 });
 // ─── AUTH TRIGGER: sendWelcomeEmail ──────────────────────────────────────────
 // Fires automatically whenever a new Firebase Auth user is created.
-// Sends a welcome email to the new athlete, and separately notifies the coach
-// so new signups can be reviewed and added to a cohort.
+// Sends a welcome email to the new athlete.
 exports.sendWelcomeEmail = functionsV1.auth.user().onCreate(async (user) => {
-    var _a, _b;
     const email = user.email;
     if (!email) {
         console.log("[sendWelcomeEmail] No email on new user, skipping.");
         return;
     }
-    const safeEmail = email.toLowerCase().trim();
     const displayName = user.displayName || undefined;
-    const provider = ((_b = (_a = user.providerData) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.providerId) || "password";
     try {
         const resend = initResend();
         await resend.emails.send({
             from: "Legacy Athlete <bookings@legacyathlete.fit>",
-            to: [safeEmail],
+            to: [email.toLowerCase().trim()],
             subject: "Welcome to Legacy Athlete — You're In.",
-            html: buildWelcomeEmail(safeEmail, displayName),
+            html: buildWelcomeEmail(email.toLowerCase().trim(), displayName),
         });
         console.log(`[sendWelcomeEmail] Welcome email sent to ${email}`);
     }
     catch (error) {
         console.error("[sendWelcomeEmail] Failed to send welcome email:", error.message);
-    }
-    // Coach notification — best-effort, does not block or fail the trigger.
-    try {
-        const resend = initResend();
-        await resend.emails.send({
-            from: "Legacy Athlete Alerts <bookings@legacyathlete.fit>",
-            to: [COACH_EMAIL],
-            subject: `🆕 New Signup: ${displayName || safeEmail}`,
-            html: buildNewSignupEmail(safeEmail, displayName || "", user.uid, provider),
-        });
-        console.log(`[sendWelcomeEmail] Coach notified of new signup: ${email}`);
-    }
-    catch (error) {
-        console.error("[sendWelcomeEmail] Failed to notify coach of new signup:", error.message);
     }
 });
 //# sourceMappingURL=index.js.map

@@ -132,26 +132,32 @@ const Programs: React.FC = () => {
                   <h3 className="font-athletic text-4xl md:text-5xl text-white">WEEKLY <span className="text-stone-500">SCHEDULE</span></h3>
                </div>
                <p className="text-stone-500 text-xs uppercase tracking-widest mt-6 md:mt-0">
-                 Sessions run 90 minutes. Arrive 10 min early.
+                 Sessions run 60 minutes. Arrive 10 min early.
                </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-stone-900 border border-stone-900 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-px bg-stone-900 border border-stone-900">
                {[
                  { day: 'MONDAY', sessions: [
-                   { time: '5:30 - 7:00 PM', focus: 'Skills + Performance', color: 'text-amber-500', dot: 'bg-amber-500' },
-                   { time: '6:30 - 8:00 PM', focus: 'Skills + Performance', color: 'text-emerald-500', dot: 'bg-emerald-500' }
+                   { time: '6:30 PM', focus: 'Speed & Agility (GS)', color: 'text-amber-500', dot: 'bg-amber-500' },
+                   { time: '7:00 PM', focus: 'Total Skills/IQ/Gameplay (GS)', color: 'text-emerald-500', dot: 'bg-emerald-500' }
                  ]},
                  { day: 'TUESDAY', sessions: [
-                   { time: '5:30 - 7:00 PM', focus: 'Skills + Performance', color: 'text-amber-500', dot: 'bg-amber-500' },
-                   { time: '6:30 - 8:00 PM', focus: 'Skills + Performance', color: 'text-emerald-500', dot: 'bg-emerald-500' }
+                   { time: '6:30 PM', focus: 'Strength + Power (GS)', color: 'text-rose-500', dot: 'bg-rose-500' },
+                   { time: '7:00 PM', focus: 'Shooting (300+) (GS)', color: 'text-blue-500', dot: 'bg-blue-500' }
+                 ]},
+                 { day: 'WEDNESDAY', sessions: [
+                   { time: '6:30 PM', focus: 'Mobility + Cond. (GS)', color: 'text-purple-500', dot: 'bg-purple-500' },
+                   { time: '7:00 PM', focus: 'Ball Handling (GS)', color: 'text-cyan-500', dot: 'bg-cyan-500' }
                  ]},
                  { day: 'THURSDAY', sessions: [
-                   { time: '5:30 - 7:00 PM', focus: 'Skills + Performance', color: 'text-amber-500', dot: 'bg-amber-500' },
-                   { time: '6:30 - 8:00 PM', focus: 'Skills + Performance', color: 'text-emerald-500', dot: 'bg-emerald-500' }
+                   { time: '6:30 PM', focus: 'Speed & Agility (GS)', color: 'text-amber-500', dot: 'bg-amber-500' },
+                   { time: '7:00 PM', focus: 'Total Skills/IQ/Gameplay (GS)', color: 'text-emerald-500', dot: 'bg-emerald-500' }
                  ]},
                  { day: 'SATURDAY', sessions: [
-                   { time: '9:00 - 10:30 AM', focus: 'Skills + Performance', color: 'text-orange-500', dot: 'bg-orange-500' }
+                   { time: '8:00 AM', focus: 'Select Practice (GS)', color: 'text-orange-500', dot: 'bg-orange-500' },
+                   { time: '9:00-9:30 AM', focus: 'Strength + Power (GS)', color: 'text-rose-500', dot: 'bg-rose-500' },
+                   { time: '9:30 AM', focus: 'Game prep: footwork and skills (GS)', color: 'text-indigo-400', dot: 'bg-indigo-400' }
                  ]}
                ].map((item, i) => (
                  <div key={i} className="schedule-item bg-black p-8 hover:bg-stone-900/40 transition-colors group">
